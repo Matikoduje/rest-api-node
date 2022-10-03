@@ -2,11 +2,13 @@
   "env": {
     "browser": true,
     "commonjs": true,
-    "es2021": true
+    "es2021": true,
+    "mocha": true
   },
   "extends": [
     "airbnb-base",
-    "plugin:node/recommended"
+    "plugin:node/recommended",
+    "plugin:mocha/recommended"
   ],
   "overrides": [],
   "parserOptions": {

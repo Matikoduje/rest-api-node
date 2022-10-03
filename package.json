@@ -7,7 +7,7 @@
   },
   "main": "app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "mocha",
     "start": "nodemon app.js"
   },
   "author": "",
@@ -23,10 +23,14 @@
     "socket.io": "^4.5.2"
   },
   "devDependencies": {
+    "chai": "^4.3.6",
     "eslint": "^8.24.0",
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-plugin-import": "^2.26.0",
+    "eslint-plugin-mocha": "^10.1.0",
+    "eslint-plugin-node": "^11.1.0",
+    "mocha": "^10.0.0",
     "nodemon": "^2.0.20",
-    "eslint-plugin-node": "^11.1.0"
+    "sinon": "^14.0.0"
   }
 }
