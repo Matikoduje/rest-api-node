@@ -5,7 +5,7 @@
     "es2021": true
   },
   "extends": [
-    "eslint:recommended",
+    "airbnb-base",
     "plugin:node/recommended"
   ],
   "overrides": [],
@@ -16,6 +16,8 @@
     "no-console": "off",
     "linebreak-style": ["error", "windows"],
     "no-param-reassign": [2, { "props": false }],
-    "no-underscore-dangle": ["error", {"allow": ["_id"]}]
+    "no-underscore-dangle": ["error", {"allow": ["_id", "_doc"]}],
+    "node/no-unpublished-require": "off",
+    "global-require": "off"
   }
 }

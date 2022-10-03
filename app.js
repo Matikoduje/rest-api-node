@@ -6,7 +6,7 @@ const bodyParser = require('body-parser');
 
 const app = express();
 const httpServer = require('http').createServer(app);
-const io = require('./socket')(httpServer);
+const io = require('./socket').init(httpServer);
 
 const { mongoDBConnection } = require('./configuration/env');
 const postRoutes = require('./routes/post');
@@ -40,6 +40,6 @@ app.use((error, req, res) => {
 });
 
 mongoose.connect(mongoDBConnection).then(() => {
-  io.on('connection', (socket) => { console.log('a connection'); });
+  io.on('connection', () => { console.log('a connection'); });
   httpServer.listen(8080);
 }).catch((err) => console.log(err));
