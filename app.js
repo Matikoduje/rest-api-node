@@ -6,13 +6,14 @@ const bodyParser = require('body-parser');
 
 const app = express();
 const httpServer = require('http').createServer(app);
-const io = require('./socket').init(httpServer);
 
+const { graphqlHTTP } = require('express-graphql');
 const { mongoDBConnection } = require('./configuration/env');
-const postRoutes = require('./routes/post');
-const authRoutes = require('./routes/auth');
-const statusRoutes = require('./routes/status');
 const { upload } = require('./middleware/upload-middleware');
+const graphqlSchema = require('./graphql/schema');
+const graphqlResolver = require('./graphql/resolvers');
+const { isAuthenticated } = require('./middleware/auth-middleware');
+const { clearImage } = require('./helpers/clear-image');
 
 app.use(bodyParser.json()); // * To jest sposób używania body parsera w aplikacji opartej na json
 app.use(express.static(path.join(__dirname, 'public')));
@@ -23,23 +24,46 @@ app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'OPTIONS, GET, POST, PUT, PATCH, DELETE');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  next();
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+  return next();
 });
 
-app.use('/feed', postRoutes);
-app.use('/auth', authRoutes);
-app.use(statusRoutes);
+app.use(isAuthenticated);
 
-app.use((error, req, res) => {
-  const statusCode = error.statusCode || 500;
-  const data = error.data || [];
-  const { message } = error;
-  res.status(statusCode).json({
-    message, data,
-  });
+app.put('/post-image', (req, res) => {
+  if (!req.isAuth) {
+    throw new Error('Not authenticated!');
+  }
+  if (!req.file) {
+    return res.status(200).json({ message: 'No file provided!' });
+  }
+  if (req.body.oldPath) {
+    clearImage(req.body.oldPath);
+  }
+  const imageUrl = req.file.path.replace(/\\/g, '/');
+
+  return res
+    .status(201)
+    .json({ message: 'File stored.', filePath: imageUrl });
 });
+
+app.use('/graphql', graphqlHTTP({
+  schema: graphqlSchema,
+  rootValue: graphqlResolver,
+  graphiql: true,
+  customFormatErrorFn(err) {
+    if (!err.originalError) {
+      return err;
+    }
+    const { data } = err.originalError;
+    const message = err.message || 'An error occurred.';
+    const code = err.originalError.code || 500;
+    return { message, status: code, data };
+  },
+}));
 
 mongoose.connect(mongoDBConnection).then(() => {
-  io.on('connection', () => { console.log('a connection'); });
   httpServer.listen(8080);
 }).catch((err) => console.log(err));

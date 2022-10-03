@@ -1,13 +1,12 @@
 const jwt = require('jsonwebtoken');
-const Post = require('../models/post');
+
 const { jsonTokenSecret } = require('../configuration/env');
 
 const isAuthenticated = (req, res, next) => {
   const authHeader = req.get('Authorization');
   if (!authHeader) {
-    const error = new Error('Not authenticated.');
-    error.statusCode = 401;
-    throw error;
+    req.isAuth = false;
+    return next();
   }
   const token = authHeader.split(' ')[1];
   let decodedToken;
@@ -15,48 +14,20 @@ const isAuthenticated = (req, res, next) => {
   try {
     decodedToken = jwt.verify(token, jsonTokenSecret);
   } catch (err) {
-    err.statusCode = 500;
-    throw err;
+    req.isAuth = false;
+    return next();
   }
 
   if (!decodedToken) {
-    const error = new Error('Not authenticated.');
-    error.statusCode = 401;
-    throw error;
+    req.isAuth = false;
+    return next();
   }
 
   req.userId = decodedToken.userId;
-  next();
-};
-
-const isAuthorized = async (req, res, next) => {
-  const { userId } = req;
-  const { postId } = req.params;
-
-  if (!postId) {
-    const error = new Error("Post doesn't exists.");
-    error.statusCode = 404;
-    throw error;
-  }
-
-  try {
-    const post = await Post.findOne({ _id: postId, creator: userId });
-    if (!post) {
-      const error = new Error('Not authorized.');
-      error.statusCode = 403;
-      throw error;
-    }
-    next();
-  } catch (err) {
-    const error = err;
-    if (!error.statusCode) {
-      error.statusCode = 500;
-    }
-    next(error);
-  }
+  req.isAuth = true;
+  return next();
 };
 
 module.exports = {
   isAuthenticated,
-  isAuthorized,
 };

@@ -1,6 +1,5 @@
 const Post = require('../models/post');
 const User = require('../models/user');
-const io = require('../socket');
 
 const { clearImage } = require('../helpers/clear-image');
 
@@ -67,7 +66,6 @@ exports.addPost = async (req, res, next) => {
     const user = await User.findById(userId);
     user.posts.push(post);
     await user.save();
-    io.getIO().emit('posts', { action: 'create', post });
     res.status(201).json({
       message: 'Post created successfully',
       post,
@@ -107,7 +105,6 @@ exports.updatePost = async (req, res, next) => {
     post.imageUrl = imageUrl;
     post.content = content;
     const updatedPost = await post.save();
-    io.getIO().emit('posts', { action: 'update', post: updatedPost });
     res.status(200).json({
       message: 'Post updated successfully',
       post: updatedPost,
@@ -138,7 +135,6 @@ exports.deletePost = async (req, res, next) => {
     const user = await User.findById(userId);
     user.posts.pull(postId);
     await user.save();
-    io.getIO().emit('posts', { action: 'delete' });
     res.status(200).json({ message: 'Post deleted!' });
   } catch (err) {
     const error = err;
